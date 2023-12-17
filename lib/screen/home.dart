@@ -1,15 +1,19 @@
 import 'dart:convert';
 
 import 'package:crud/api/api.dart';
+import 'package:crud/screen/default.dart';
+import 'package:crud/screen/profile.dart';
+import 'package:crud/screen/setting.dart';
 import 'package:flutter/material.dart';
 
 import '../include/card.dart';
 import '../model/Student.dart';
 import 'createStudent.dart';
+import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 
+import 'event.dart';
 
 class HomeScreen extends StatefulWidget {
-
   const HomeScreen({super.key});
 
   @override
@@ -17,60 +21,61 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  var _bottomNavIndex = 0;
+  final List<Widget> _children = [
+    const DefaultPage(),
+    const EventPage(),
+    const SettingPage(),
+    const ProfilePage(),
+  ];
 
-  List<Student> students = [];
+  final iconList = <IconData>[
+    Icons.home,
+    Icons.calendar_month,
+    Icons.settings,
+    Icons.person,
+  ];
 
   @override
   void initState() {
     super.initState();
-    fetchStudent();
   }
-
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Student"),
-      ),
-      body: ListView.builder(
-          itemCount: students.length,
-          itemBuilder: (context,index){
-            final student = students[index];
-            final email = student.student_email;
-            return  CardExample(student: student,notifyParent: fetchStudent);
-          }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) =>  createStudent(notifyParent: fetchStudent,)));
-        },
+    return MaterialApp(
+      home: Scaffold(
 
-        child: const Icon(Icons.add),
+        body: _children[_bottomNavIndex],
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: Colors.redAccent,
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(50.0))),
+          onPressed: () {
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => createStudent(
+                      notifyParent: fetchStudent,
+                    )));
+          },
+          child: const Icon(Icons.add),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: AnimatedBottomNavigationBar(
+          activeIndex: _bottomNavIndex,
+          inactiveColor: Colors.grey,
+          activeColor: Colors.redAccent,
+          icons: iconList,
+          gapLocation: GapLocation.center,
+          backgroundColor: Colors.blueAccent,
+          notchSmoothness: NotchSmoothness.softEdge,
+          onTap: (index) => setState(() => _bottomNavIndex = index),
+          //other params
+        ),
       ),
     );
-
-
   }
 
-
-  void fetchStudent() async {
-    // print("Student Fetch Started");
-    // const url = "http://127.0.0.1:8000/api/students";
-    // final uri = Uri.parse(url);
-    // final response = await http.get(uri);
-    // final body = response.body;
-    // final json = jsonDecode(body);
-    // final result = json['data'];
-    // final transformed = result.map<Student>((e) => Student.fromJson(e)).toList();
-    // setState(() {
-    //     students = transformed;
-    // });
-    CallApi().getData('students').then((response) {
-      setState(() {
-        Iterable list = json.decode(response.body)['data'];
-        students = list.map((model) => Student.fromJson(model)).toList();
-      });
-    });
+  void fetchStudent(){
+    print("fetchStudent");
   }
 }
