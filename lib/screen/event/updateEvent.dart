@@ -1,36 +1,53 @@
 import 'dart:convert';
 
+import 'package:crud/model/Event.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 
-import '../api/api.dart';
+import '../../api/api.dart';
+import '../../model/Student.dart';
 
 // ignore: camel_case_types
-class createStudent extends StatefulWidget {
-  final Function notifyParent;
-  const createStudent({super.key, required this.notifyParent});
+class UpdateEvent extends StatefulWidget {
+  final Event event;
+  final Function() notifyParent;
+
+  const UpdateEvent(
+      {super.key, required this.event, required this.notifyParent});
 
   @override
-  State<createStudent> createState() => _createStudentState();
+  State<UpdateEvent> createState() => _UpdateEventState();
 }
 
 // ignore: camel_case_types
-class _createStudentState extends State<createStudent> {
+class _UpdateEventState extends State<UpdateEvent> {
   final formKey = GlobalKey<FormState>();
-  TextEditingController nameController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController addressController = TextEditingController();
-  TextEditingController phoneController = TextEditingController();
+  TextEditingController eventNameController = TextEditingController();
+  TextEditingController eventDescriptionController = TextEditingController();
+  TextEditingController eventVenueController = TextEditingController();
+  TextEditingController eventDateController = TextEditingController();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    eventNameController.text = widget.event.event_name;
+    eventDescriptionController.text = widget.event.event_description;
+    eventVenueController.text = widget.event.event_venue;
+    eventDateController.text = DateFormat('MMMM dd, yyyy - h:mm a').format(widget.event.event_date).toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     final double height = MediaQuery.of(context).size.height;
     final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
-
     return Scaffold(
         key: scaffoldKey,
         appBar: AppBar(
-          title: const Text("Create Student"),
+          title: const Text("Update Event"),
         ),
         backgroundColor: const Color(0xFFffffff),
         body: Container(
@@ -41,13 +58,13 @@ class _createStudentState extends State<createStudent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: height * 0.04),
-                  const Text(
-                    "Create Student",
-                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: height * 0.05),
+                  // const Text(
+                  //   "",
+                  //   style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  // ),
+                  // SizedBox(height: height * 0.05),
                   TextFormField(
-                    controller: nameController,
+                    controller: eventNameController,
                     decoration: const InputDecoration(
                       labelText: "Name",
                       labelStyle: TextStyle(fontSize: 20, color: Colors.black),
@@ -62,7 +79,7 @@ class _createStudentState extends State<createStudent> {
                   ),
                   SizedBox(height: height * 0.02),
                   TextFormField(
-                    controller: emailController,
+                    controller: eventDescriptionController,
                     decoration: const InputDecoration(
                       labelText: "Email",
                       labelStyle: TextStyle(fontSize: 20, color: Colors.black),
@@ -77,7 +94,7 @@ class _createStudentState extends State<createStudent> {
                   ),
                   SizedBox(height: height * 0.02),
                   TextFormField(
-                    controller: addressController,
+                    controller: eventVenueController,
                     decoration: const InputDecoration(
                       labelText: "Address",
                       labelStyle: TextStyle(fontSize: 20, color: Colors.black),
@@ -92,21 +109,58 @@ class _createStudentState extends State<createStudent> {
                   ),
                   SizedBox(height: height * 0.02),
                   TextFormField(
-                    controller: phoneController,
+                    onTap: () async {
+                      DateTime? dateTime = await showOmniDateTimePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(1600)
+                              .subtract(const Duration(days: 3652)),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 3652),
+                          ),
+                          is24HourMode: false,
+                          isShowSeconds: false,
+                          minutesInterval: 1,
+                          secondsInterval: 1,
+                          isForce2Digits: true,
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(16)),
+                          constraints: const BoxConstraints(
+                            maxWidth: 350,
+                            maxHeight: 650,
+                          ),
+                          transitionBuilder: (context, anim1, anim2, child) {
+                            return FadeTransition(
+                              opacity: anim1.drive(
+                                Tween(
+                                  begin: 0,
+                                  end: 1,
+                                ),
+                              ),
+                              child: child,
+                            );
+                          },
+                          transitionDuration: const Duration(milliseconds: 200),
+                          barrierDismissible: true);
+                      if (dateTime != null) {
+                        setState(() {
+                          eventDateController.text = DateFormat('MMMM dd, yyyy - h:mm a').format(dateTime).toString();
+                        });
+                      }
+                    },
+                    controller: eventDateController,
                     decoration: const InputDecoration(
-                      labelText: "Phone",
+                      labelText: "Event Date",
                       labelStyle: TextStyle(fontSize: 20, color: Colors.black),
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter phone';
+                        return 'Please enter date';
                       }
                       return null;
                     },
                   ),
-                  SizedBox(height: height * 0.02),
-
                   SizedBox(height: height * 0.05),
                   SizedBox(
                     width: double.infinity,
@@ -121,19 +175,18 @@ class _createStudentState extends State<createStudent> {
                           if (!context.mounted) return;
                           if (status['success'] == true) {
                             MotionToast.success(
-                              position:  MotionToastPosition.top,
+                              position: MotionToastPosition.top,
                               title: const Text("Success"),
                               description: Text("${status['message']}"),
                             ).show(context);
                             widget.notifyParent();
                           } else {
                             MotionToast.error(
-                              position:  MotionToastPosition.top,
+                              position: MotionToastPosition.top,
                               title: const Text("Error"),
                               description: Text("${status['message']}"),
                             ).show(context);
                           }
-                          print(status['message']);
                         }
                       },
                       child: const Text(
@@ -148,12 +201,17 @@ class _createStudentState extends State<createStudent> {
   }
 
   Future<Map<String, dynamic>> createStudent() async {
+    // print(eventDateController.text);
+    DateFormat format = DateFormat("MMMM dd, yyyy - h:mm a");
+    DateTime dateTime = format.parse(eventDateController.text);
+
     final response = await CallApi().postData({
-      "student_name": nameController.text,
-      "student_email": emailController.text,
-      "student_address": addressController.text,
-      "student_phone": phoneController.text,
-    }, 'student-create');
+      "id": "${widget.event.id}",
+      "event_name": eventNameController.text,
+      "event_description": eventDescriptionController.text,
+      "event_location": eventVenueController.text,
+      "event_date": dateTime.toString(),
+    }, 'event/update');
     final body = json.decode(response.body);
     return body;
   }

@@ -1,7 +1,6 @@
 import 'dart:convert';
 
-import 'package:crud/screen/updateStudent.dart';
-import 'package:crud/screen/viewStudent.dart';
+import 'package:crud/screen/student/updateStudent.dart';
 import 'package:flutter/material.dart';
 import 'package:material_dialogs/material_dialogs.dart';
 import 'package:material_dialogs/widgets/buttons/icon_button.dart';
@@ -9,6 +8,7 @@ import 'package:material_dialogs/widgets/buttons/icon_outline_button.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../api/api.dart';
 import '../model/Student.dart';
+import '../screen/student/viewStudent.dart';
 
 class CardExample extends StatelessWidget {
   final Student student;

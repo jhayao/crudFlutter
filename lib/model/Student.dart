@@ -16,6 +16,6 @@ class Student {
       : student_name = json['student_name'],
         student_email = json['student_email'],
         id = json['id'],
-        student_phone = json['student_phone'],
-        student_address = json['student_address'];
+        student_phone = json['student_phone'] ?? '',
+        student_address = json['student_address'] ?? '';
 }

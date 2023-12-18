@@ -31,8 +31,8 @@ class _AuthPageState extends State<AuthPage> {
     "", //confirmPassword
   ];
 
-  final _firstnamekey = GlobalKey<FormState>();
-  final _lastNamekey = GlobalKey<FormState>();
+
+  final _fullNameKey = GlobalKey<FormState>();
   final _emailKey = GlobalKey<FormState>();
   final _passwordKey = GlobalKey<FormState>();
   final _confirmPasswordKey = GlobalKey<FormState>();
@@ -103,29 +103,7 @@ class _AuthPageState extends State<AuthPage> {
                       ),
                       register
                           ? buildTextField(
-                              "First Name",
-                              Icons.person_outlined,
-                              false,
-                              size,
-                              (valuename) {
-                                if (valuename.length <= 2) {
-                                  buildSnackError(
-                                    'Invalid name',
-                                    context,
-                                    size,
-                                  );
-                                  return '';
-                                }
-                                return null;
-                              },
-                              _firstnamekey,
-                              0,
-                              isDarkMode,
-                            )
-                          : Container(),
-                      register
-                          ? buildTextField(
-                              "Last Name",
+                              "Full Name",
                               Icons.person_outlined,
                               false,
                               size,
@@ -140,9 +118,9 @@ class _AuthPageState extends State<AuthPage> {
                                 }
                                 return null;
                               },
-                              _lastNamekey,
+                              _fullNameKey,
                               1,
-                              isDarkMode,
+                        isDarkMode,
                             )
                           : Container(),
                       Form(
@@ -335,8 +313,7 @@ class _AuthPageState extends State<AuthPage> {
                           onPressed: () async {
                             if (register) {
                               //validation for register
-                              if (_firstnamekey.currentState!.validate()) {
-                                if (_lastNamekey.currentState!.validate()) {
+                                if (_fullNameKey.currentState!.validate()) {
                                   if (_emailKey.currentState!.validate()) {
                                     if (_passwordKey.currentState!.validate()) {
                                       if (_confirmPasswordKey.currentState!
@@ -347,13 +324,21 @@ class _AuthPageState extends State<AuthPage> {
                                               context,
                                               size);
                                         } else {
-                                          print('register');
+                                          final bool success = await  registerUser();
+                                          if (!context.mounted) return;
+                                          if (success){
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const HomeScreen()),
+                                            );
+                                          }
                                         }
                                       }
                                     }
                                   }
                                 }
-                              }
                             } else {
                               //validation for login
 
@@ -589,13 +574,38 @@ class _AuthPageState extends State<AuthPage> {
     }, 'auth\\login');
     final body = response.body;
     final result = json.decode(body);
-
     if (result['success']) {
       UserPreference.setToken(result['data']['accessToken']);
+      print(result['data']['user']['role']);
+      UserPreference.setUserRole(result['data']['user']['role']);
+      UserPreference.setUserId(result['data']['user']['id']);
+      UserPreference.setUser(User.fromJson(result['data']['user']));
       return true;
     }
     return false;
 
   }
+
+  Future<bool> registerUser() async {
+    final response  = await CallApi().postData({
+      "name": textfieldsStrings[1],
+      "email": textfieldsStrings[2],
+      "password": textfieldsStrings[3],
+      "c_password": textfieldsStrings[4],
+    }, 'auth\\register');
+    final body = response.body;
+    final result = json.decode(body);
+    if (result['success']) {
+      UserPreference.setToken(result['data']['accessToken']);
+      print(result['data']['user']['role']);
+      UserPreference.setUserRole(result['data']['user']['role']);
+      UserPreference.setUserId(result['data']['user']['id']);
+      UserPreference.setUser(User.fromJson(result['data']['user']));
+      return true;
+    }
+    return false;
+
+  }
+
 
 }
